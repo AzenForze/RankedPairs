@@ -3,7 +3,7 @@ use std::fmt::{self, Formatter, Display};
 use graph::Graph;
 
 /**
-The results of a matchup, including which one won, and how much they won by.
+The results of a matchup, including which candidate won, and how much they won by.
 */
 pub struct MatchupResult<'a>
 {

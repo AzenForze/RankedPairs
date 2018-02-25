@@ -50,25 +50,35 @@ impl Election
     {
         for line in data.trim().lines()
         {
-            let parts: Vec<_> = line.trim().split(':').collect();
+            let mut parts = line.trim().split(':');
 
-            assert_eq!(parts.len(), 2);
-
-            let mut iter = parts.into_iter();
-            
-            let part = iter.next().unwrap();
-
-            let count = match part.parse::<u32>()
+            let count_str = match parts.next()
             {
-                Ok(i) => i,
-                Err(e) => panic!("{}; string was: {}", e, part)
+                Some(count_str) => count_str,
+                None => panic!("Wrong ballot format")
             };
             
-            let part = iter.next().unwrap();
+            let vote = match parts.next()
+            {
+                Some(vote) => vote,
+                None => panic!("Wrong ballot format")
+            };
+
+            match parts.next()
+            {
+                Some(_) => panic!("Wrong ballot format"),
+                None => {}
+            }
+            
+            let count = match count_str.parse::<u32>()
+            {
+                Ok(count) => count,
+                Err(e) => panic!("{}; string was: {}", e, count_str)
+            };
 
             for _ in 0..count
             {
-                self.add_vote(part);
+                self.add_vote(vote);
             }
         }
     }

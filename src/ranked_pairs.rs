@@ -40,11 +40,26 @@ impl RankedPairs
 
         return ranked_pairs;
     }
-
+    
     /**
     Gets the RankedPairs winner of the SumMatrix.
     */
     pub fn get_winner(&self, use_margins: bool) -> Result<String, EmptyGraphError>
+    {
+        let ranked_pairs = self.ranked_pairs(use_margins);
+
+        let mut graph = Graph::new();
+
+        for result in ranked_pairs
+        {
+            result.try_lock_in(&mut graph);
+        }
+
+        graph.find_sink()
+    }
+
+    /*
+    fn get_winner_impl(&self, use_margins: bool) -> Result<String, EmptyGraphError>
     {
         let ranked_pairs = self.ranked_pairs(use_margins);
         
@@ -65,7 +80,8 @@ impl RankedPairs
         
         // Debug output
         println!("Graph:\n{}", graph);
-
+        
         graph.find_sink()   
     }
+    */
 }

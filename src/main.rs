@@ -23,36 +23,9 @@ fn main()
         15:Chattanooga>Knoxville>Nashville>Memphis
         17:Knoxville>Chattanooga>Nashville>Memphis");
 
-    let ranked_pairs = RankedPairs::with_election(city_elec);
+    let mut basic_5cand = Election::new();
 
-    let winner = match ranked_pairs.get_winner(true)
-    {
-        Ok(w) => w,
-        Err(e) => panic!("{}", e)
-    };
-
-    println!("\nWinner: {}", winner);
-    
-    /*
-    let mut e = Election::new();
-
-    e.add_ballots("
-    35:B>C>S
-    34:C>S>B
-    31:S>B>C");
-
-    let rp = RankedPairs::with_election(e);
-    let winner = match rp.get_winner(false)
-    {
-        Ok(w) => w,
-        Err(e) => panic!("{}", e)
-    };
-
-    println!("\nWinner: {}", winner);
-
-    let mut e = Election::new();
-
-    e.add_ballots("
+    basic_5cand.add_ballots("
         5:A>C>B>E>D
         5:A>D>E>C>B
         8:B>E>D>A>C
@@ -62,33 +35,20 @@ fn main()
         7:D>C>E>B>A
         8:E>B>A>D>C");
 
-    let mut city_elec = Election::new();
+    let mut basic_3cand = Election::new();
 
-    city_elec.add_ballots("
-        42:Memphis>Nashville>Chattanooga>Knoxville
-        26:Nashville>Chattanooga>Knoxville>Memphis
-        15:Chattanooga>Knoxville>Nashville>Memphis
-        17:Knoxville>Chattanooga>Nashville>Memphis");
-    
-    
-    let ntrp = RankedPairs::new();
-    let matrix = e.get_matrix();
-    
-    let winner = match ntrp.get_winner(&matrix, false)
-    {
-        Ok(w) => w,
-        Err(e) => panic!("{}", e)
-    };
-    
-    
-    println!("\n\nWinner: {}", winner);
-    
-    let winner = match ntrp.get_winner(&city_elec.get_matrix(), false)
+    basic_3cand.add_ballots("
+        35:B>C>S
+        34:C>S>B
+        31:S>B>C");
+
+    let ranked_pairs = RankedPairs::with_election(city_elec);
+
+    let winner = match ranked_pairs.get_winner(true)
     {
         Ok(w) => w,
         Err(e) => panic!("{}", e)
     };
 
-    println!("\n\nWinner: {}", winner);
-    */
+    println!("\nWinner: {}", winner);
 }
