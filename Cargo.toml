@@ -1,0 +1,6 @@
+[package]
+name = "ranked_pairs"
+version = "0.1.0"
+authors = ["Azen <noreply@email.com>"]
+
+[dependencies]
