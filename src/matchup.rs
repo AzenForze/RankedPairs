@@ -1,5 +1,5 @@
-use matchup_result::MatchupResult;
 
+use matchup_result::MatchupResult;
 
 /**
 A matchup between two candidates, including how many points each has versus the other.
@@ -21,22 +21,22 @@ impl Matchup
 
     pub fn result(&self) -> MatchupResult
     {
-        let winner: String;
-        let loser: String;
+        let winner: &str;
+        let loser: &str;
         let wins: u32;
         let margin: u32;
-
+        
         if self.first_wins > self.second_wins
         {
-            winner = self.first.clone();
-            loser = self.second.clone();
+            winner = &self.first;
+            loser = &self.second;
             wins = self.first_wins;
             margin = self.first_wins - self.second_wins;
         }
         else
         {
-            winner = self.second.clone();
-            loser = self.first.clone();
+            winner = &self.second;
+            loser = &self.first;
             wins = self.second_wins;
             margin = self.second_wins - self.first_wins;
         }

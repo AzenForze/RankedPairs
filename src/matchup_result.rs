@@ -5,19 +5,19 @@ use graph::Graph;
 /**
 The results of a matchup, including which one won, and how much they won by.
 */
-pub struct MatchupResult
+pub struct MatchupResult<'a>
 {
-    winner: String,
-    loser: String,
+    winner: &'a str,
+    loser: &'a str,
     wins: u32,
     margin: u32
 }
 
-impl MatchupResult
+impl<'a> MatchupResult<'a>
 {
-    pub fn new(winner: String, loser: String, wins: u32, margin: u32) -> Self
+    pub fn new(winner: &'a str, loser: &'a str, wins: u32, margin: u32) -> Self
     {
-        MatchupResult { winner: winner, loser: loser, wins:wins, margin: margin }
+        MatchupResult{ winner: winner, loser: loser, wins: wins, margin: margin }
     }
 
     pub fn cmp(&self, other: &MatchupResult, use_margin: bool) -> Ordering
@@ -53,18 +53,18 @@ impl MatchupResult
 
     pub fn try_lock_in(&self, graph: &mut Graph<String>) -> bool
     {
-        let is_path = graph.is_path(&self.winner, &self.loser);
+        let is_path = graph.is_path(&self.winner.to_owned(), &self.loser.to_owned());
 
         if !is_path
         {
-            graph.add_edge(self.loser.clone(), self.winner.clone());
+            graph.add_edge(self.loser.to_owned(), self.winner.to_owned());
             return true;
         }
         return false;
     }
 }
 
-impl Display for MatchupResult
+impl<'a> Display for MatchupResult<'a>
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result
     {
