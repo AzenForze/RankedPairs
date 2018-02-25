@@ -19,29 +19,16 @@ impl Matchup
         Matchup { first: first, second: second, first_wins: 0, second_wins: 0 }
     }
 
-    pub fn result(&self) -> MatchupResult
+    pub fn result(&self, use_margin: bool) -> MatchupResult
     {
-        let winner: &str;
-        let loser: &str;
-        let wins: u32;
-        let margin: u32;
-        
         if self.first_wins > self.second_wins
         {
-            winner = &self.first;
-            loser = &self.second;
-            wins = self.first_wins;
-            margin = self.first_wins - self.second_wins;
+            MatchupResult::new(&self.first, &self.second, &self.first_wins, &self.second_wins, use_margin)
         }
         else
         {
-            winner = &self.second;
-            loser = &self.first;
-            wins = self.second_wins;
-            margin = self.second_wins - self.first_wins;
+            MatchupResult::new(&self.second, &self.first, &self.second_wins, &self.first_wins, use_margin)
         }
-        
-        MatchupResult::new(winner, loser, wins, margin)
     }
 
     pub fn add_win_for(&mut self, winner: &String) -> Option<String>

@@ -12,31 +12,33 @@ After all matches have been considered, all paths will lead to one candidate, wh
 */
 pub struct RankedPairs
 {
-    sum_matrix: SumMatrix
+    sum_matrix: SumMatrix,
+    strength_type: StrengthType
 }
 
 impl RankedPairs
 {
-    pub fn with_matrix(sum_matrix: SumMatrix) -> Self
+    pub fn with_matrix(sum_matrix: SumMatrix, strength_type: StrengthType) -> Self
     {
-        RankedPairs{ sum_matrix: sum_matrix }
-    }
-    
-    pub fn with_election(election: Election) -> Self
-    {
-        RankedPairs::with_matrix(election.get_matrix())
+        RankedPairs{ sum_matrix: sum_matrix, strength_type: strength_type }
     }
 
-    fn ranked_pairs(&self, use_margins: bool) -> Vec<MatchupResult>
+    pub fn with_election(election: Election, strength_type: StrengthType) -> Self
+    {
+        RankedPairs::with_matrix(election.get_matrix(), strength_type)
+    }
+
+    fn ranked_pairs(&self) -> Vec<MatchupResult>
     {
         let mut ranked_pairs: Vec<MatchupResult> = Vec::new();
 
         for matchup in self.sum_matrix.matchups()
         {
-            ranked_pairs.push(matchup.result());
+            ranked_pairs.push(matchup.result(self.strength_type.use_margin()));
         }
 
-        ranked_pairs.sort_by( |a, b| b.cmp(&a, use_margins));
+        ranked_pairs.sort();
+        ranked_pairs.reverse();
 
         return ranked_pairs;
     }
@@ -44,9 +46,18 @@ impl RankedPairs
     /**
     Gets the RankedPairs winner of the SumMatrix.
     */
-    pub fn get_winner(&self, use_margins: bool) -> Result<String, EmptyGraphError>
+    pub fn get_winner(&self) -> Result<String, EmptyGraphError>
     {
-        let ranked_pairs = self.ranked_pairs(use_margins);
+        let ranked_pairs = self.ranked_pairs();
+
+        /*
+        println!("Ranked Pairs: ");
+
+        for m in ranked_pairs.iter()
+        {
+            println!("{}", m);
+        }
+        */
 
         let mut graph = Graph::new();
 
@@ -54,34 +65,27 @@ impl RankedPairs
         {
             result.try_lock_in(&mut graph);
         }
+        
+        //println!("Graph:\n{}", graph);
 
         graph.find_sink()
     }
+}
 
-    /*
-    fn get_winner_impl(&self, use_margins: bool) -> Result<String, EmptyGraphError>
+pub enum StrengthType
+{
+    Margin,
+    WinningVotes
+}
+
+impl StrengthType
+{
+    pub fn use_margin(&self) -> bool
     {
-        let ranked_pairs = self.ranked_pairs(use_margins);
-        
-        // Debug output
-        println!("Ranked Pairs: ");
-
-        for m in ranked_pairs.iter()
+        match *self
         {
-            println!("{}", m);
+            StrengthType::Margin => true,
+            StrengthType::WinningVotes => false
         }
-        
-        let mut graph = Graph::new();
-
-        for m in ranked_pairs
-        {
-            m.try_lock_in(&mut graph);
-        }
-        
-        // Debug output
-        println!("Graph:\n{}", graph);
-        
-        graph.find_sink()   
     }
-    */
 }

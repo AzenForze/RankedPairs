@@ -10,21 +10,24 @@ mod table;
 mod dfs;
 
 use election::Election;
-use ranked_pairs::RankedPairs;
+use ranked_pairs::{RankedPairs, StrengthType};
 
 
 fn main()
 {
     let mut city_elec = Election::new();
 
+    // Winner should be Nashville?
     city_elec.add_ballots("
         42:Memphis>Nashville>Chattanooga>Knoxville
         26:Nashville>Chattanooga>Knoxville>Memphis
         15:Chattanooga>Knoxville>Nashville>Memphis
         17:Knoxville>Chattanooga>Nashville>Memphis");
 
+
     let mut basic_5cand = Election::new();
 
+    // Winner should be A?
     basic_5cand.add_ballots("
         5:A>C>B>E>D
         5:A>D>E>C>B
@@ -35,20 +38,23 @@ fn main()
         7:D>C>E>B>A
         8:E>B>A>D>C");
 
+
     let mut basic_3cand = Election::new();
 
+    // Winner should be B?
     basic_3cand.add_ballots("
         35:B>C>S
         34:C>S>B
         31:S>B>C");
 
-    let ranked_pairs = RankedPairs::with_election(city_elec);
+    let ranked_pairs = RankedPairs::with_election(city_elec, StrengthType::Margin);
 
-    let winner = match ranked_pairs.get_winner(true)
+    let winner = match ranked_pairs.get_winner()
     {
         Ok(w) => w,
         Err(e) => panic!("{}", e)
     };
+
 
     println!("\nWinner: {}", winner);
 }

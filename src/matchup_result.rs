@@ -5,50 +5,67 @@ use graph::Graph;
 /**
 The results of a matchup, including which candidate won, and how much they won by.
 */
+#[derive(PartialEq, Eq)]
 pub struct MatchupResult<'a>
 {
     winner: &'a str,
     loser: &'a str,
-    wins: u32,
-    margin: u32
+    wins: &'a u32,
+    loses: &'a u32,
+    use_margin: bool
 }
 
-impl<'a> MatchupResult<'a>
+impl <'a> Ord for MatchupResult<'a>
 {
-    pub fn new(winner: &'a str, loser: &'a str, wins: u32, margin: u32) -> Self
+    fn cmp(&self, other: &MatchupResult) -> Ordering
     {
-        MatchupResult{ winner: winner, loser: loser, wins: wins, margin: margin }
+        self.partial_cmp(other).unwrap()
     }
+}
 
-    pub fn cmp(&self, other: &MatchupResult, use_margin: bool) -> Ordering
+impl<'a> PartialOrd for MatchupResult<'a>
+{
+    fn partial_cmp(&self, other: &MatchupResult) -> Option<Ordering>
     {
-        if use_margin
+        if self.use_margin
         {
-            if self.margin < other.margin
+            let margin = self.wins - self.loses;
+            let other_margin = other.wins - other.loses;
+
+            if margin < other_margin
             {
-                return Ordering::Less;
+                return Some(Ordering::Less);
             }
-            else if self.margin > other.margin
+            else if margin > other_margin
             {
-                return Ordering::Greater;
+                return Some(Ordering::Greater);
             }
             else {
-                return Ordering::Equal;
+                return Some(Ordering::Equal);
             }
         }
         else {
             if self.wins < other.wins
             {
-                return Ordering::Less;
+                return Some(Ordering::Less);
             }
             else if self.wins > other.wins
             {
-                return Ordering::Greater;
+                return Some(Ordering::Greater);
             }
             else {
-                return Ordering::Equal;
+                return Some(Ordering::Equal);
             }
         }
+    }
+}
+
+
+impl<'a> MatchupResult<'a>
+{
+    pub fn new(winner: &'a str, loser: &'a str, wins: &'a u32, loses: &'a u32, use_margin: bool) -> Self
+    {
+        MatchupResult{ winner: winner, loser: loser, wins: wins, loses: loses, use_margin: use_margin }
     }
 
     pub fn try_lock_in(&self, graph: &mut Graph<String>) -> bool
@@ -68,6 +85,6 @@ impl<'a> Display for MatchupResult<'a>
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result
     {
-        write!(f, "{} wins vs {}; wv: {} margin: {}", self.winner, self.loser, self.wins, self.margin)
+        write!(f, "{} wins vs {}; wv: {} margin: {}", self.winner, self.loser, self.wins, self.wins - self.loses)
     }
 }
