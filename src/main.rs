@@ -21,7 +21,7 @@ fn main()
         42:Memphis>Nashville>Chattanooga>Knoxville
         26:Nashville>Chattanooga>Knoxville>Memphis
         15:Chattanooga>Knoxville>Nashville>Memphis
-        17:Knoxville>Chattanooga>Nashville>Memphis".to_string());
+        17:Knoxville>Chattanooga>Nashville>Memphis");
 
     let ranked_pairs = RankedPairs::with_election(city_elec);
 
@@ -39,7 +39,7 @@ fn main()
     e.add_ballots("
     35:B>C>S
     34:C>S>B
-    31:S>B>C".to_owned());
+    31:S>B>C");
 
     let rp = RankedPairs::with_election(e);
     let winner = match rp.get_winner(false)
@@ -60,7 +60,7 @@ fn main()
         7:C>A>E>B>D
         2:C>B>A>D>E
         7:D>C>E>B>A
-        8:E>B>A>D>C".to_string());
+        8:E>B>A>D>C");
 
     let mut city_elec = Election::new();
 
@@ -68,7 +68,7 @@ fn main()
         42:Memphis>Nashville>Chattanooga>Knoxville
         26:Nashville>Chattanooga>Knoxville>Memphis
         15:Chattanooga>Knoxville>Nashville>Memphis
-        17:Knoxville>Chattanooga>Nashville>Memphis".to_string());
+        17:Knoxville>Chattanooga>Nashville>Memphis");
     
     
     let ntrp = RankedPairs::new();

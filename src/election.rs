@@ -22,7 +22,7 @@ impl Election
     Parses a String vote.
     "A>B=C>D" creates [[a], [b, c], [d]]
     */
-    pub fn add_vote(&mut self, data: String)
+    pub fn add_vote(&mut self, data: &str)
     {
         let mut ballot: Vec<Vec<String>> = Vec::new();
 
@@ -32,7 +32,7 @@ impl Election
 
             for c in rank.split('=')
             {
-                ranks.push(c.to_string());
+                ranks.push(c.to_owned());
             }
             ballot.push(ranks);
         }
@@ -46,9 +46,9 @@ impl Election
     [count]:[vote]
     (See self.add_vote() for [vote])
     */
-    pub fn add_ballots<S>(&mut self, data: S) where S: Into<String>
+    pub fn add_ballots(&mut self, data: &str)
     {
-        for line in data.into().trim().lines()
+        for line in data.trim().lines()
         {
             let parts: Vec<_> = line.trim().split(':').collect();
 
@@ -68,7 +68,7 @@ impl Election
 
             for _ in 0..count
             {
-                self.add_vote(part.to_owned());
+                self.add_vote(part);
             }
         }
     }
