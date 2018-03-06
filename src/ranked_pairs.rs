@@ -1,3 +1,4 @@
+
 use sum_matrix::SumMatrix;
 use graph::{EmptyGraphError, Graph};
 use election::Election;
@@ -28,13 +29,15 @@ impl RankedPairs
         RankedPairs::with_matrix(election.get_matrix(), strength_type)
     }
 
+    /// Copies matchups into a list
+    /// and sorts them based on their strength of victory
     fn ranked_pairs(&self) -> Vec<MatchupResult>
     {
         let mut ranked_pairs: Vec<MatchupResult> = Vec::new();
 
         for matchup in self.sum_matrix.matchups()
         {
-            ranked_pairs.push(matchup.result(self.strength_type.use_margin()));
+            ranked_pairs.push(matchup.result(&self.strength_type));
         }
 
         ranked_pairs.sort();
@@ -89,3 +92,91 @@ impl StrengthType
         }
     }
 }
+
+impl<'a> From<&'a StrengthType> for bool
+{
+    fn from(stype: &'a StrengthType) -> bool
+    {
+        match *stype
+        {
+            StrengthType::Margin => true,
+            StrengthType::WinningVotes => false
+        }
+    }
+}
+
+
+#[cfg(test)]
+mod RankedPairsTests
+{
+    use super::*;
+
+    #[test]
+    /// Winner should be Nashville?
+    fn test_one()
+    {
+        let mut election = Election::new();
+
+        election.add_ballots("
+        42:Memphis>Nashville>Chattanooga>Knoxville
+        26:Nashville>Chattanooga>Knoxville>Memphis
+        15:Chattanooga>Knoxville>Nashville>Memphis
+        17:Knoxville>Chattanooga>Nashville>Memphis");
+
+        let ranked_pairs = RankedPairs::with_election(election, StrengthType::Margin);
+
+        match ranked_pairs.get_winner()
+        {
+            Ok(winner) => assert_eq!(winner, "Nashville", "Result ({}) != Nashville", winner),
+            Err(e) => { panic!("Error: {}", e) }
+        }
+    }
+    
+    #[test]
+    // Winner should be A?
+    fn test_two()
+    {
+        let mut election = Election::new();
+
+
+        election.add_ballots("
+        5:A>C>B>E>D
+        5:A>D>E>C>B
+        8:B>E>D>A>C
+        3:C>A>B>E>D
+        7:C>A>E>B>D
+        2:C>B>A>D>E
+        7:D>C>E>B>A
+        8:E>B>A>D>C");
+
+        let ranked_pairs = RankedPairs::with_election(election, StrengthType::Margin);
+
+        match ranked_pairs.get_winner()
+        {
+            Ok(winner) => assert_eq!(winner, "A", "Result ({}) != A", winner),
+            Err(e) => { panic!("Error: {}", e) }
+        }
+    }
+    
+    #[test]
+    // Winner should be B?
+    fn test_three()
+    {
+        let mut election = Election::new();
+
+
+        election.add_ballots("
+        35:B>C>S
+        34:C>S>B
+        31:S>B>C");
+
+        let ranked_pairs = RankedPairs::with_election(election, StrengthType::Margin);
+
+        match ranked_pairs.get_winner()
+        {
+            Ok(winner) => assert_eq!(winner, "B", "Result ({}) != B", winner),
+            Err(e) => { panic!("Error: {}", e) }
+        }
+    }
+}
+

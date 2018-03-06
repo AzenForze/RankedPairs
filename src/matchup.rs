@@ -18,34 +18,69 @@ impl Matchup
     {
         Matchup { first: first, second: second, first_wins: 0, second_wins: 0 }
     }
-
-    pub fn result(&self, use_margin: bool) -> MatchupResult
+    
+    pub fn result<T>(&self, use_margin: T) -> MatchupResult where T: Into<bool>
     {
-        if self.first_wins > self.second_wins
+        let (winner, loser, wins, loses) = if self.first_wins > self.second_wins
         {
-            MatchupResult::new(&self.first, &self.second, &self.first_wins, &self.second_wins, use_margin)
+            (&self.first, &self.second, &self.first_wins, &self.second_wins)
         }
         else
         {
-            MatchupResult::new(&self.second, &self.first, &self.second_wins, &self.first_wins, use_margin)
-        }
+            (&self.second, &self.first, &self.second_wins, &self.first_wins)
+        };
+
+        MatchupResult::new(winner, loser, wins, loses, use_margin.into())
     }
 
-    pub fn add_win_for(&mut self, winner: &String) -> Option<String>
+    pub fn add_win_for(&mut self, winner: &str) -> Result<(), MatchupError>
     {
         if *winner == self.first
         {
             self.first_wins += 1;
-            return None;
+            return Ok(());
         }
         else if *winner == self.second
         {
             self.second_wins += 1;
-            return None;
+            return Ok(());
         }
         else {
-            return Some("Winner wasn't in matchup".to_string());
+            return Err(MatchupError::new("Winner wasn't in matchup".to_owned()));
         }
     }
+}
 
+use std::error::Error;
+
+#[derive(Debug)]
+pub struct MatchupError
+{
+    description: String
+}
+
+impl MatchupError
+{
+    fn new(description: String) -> Self
+    {
+        MatchupError{ description: description }
+    }
+}
+
+impl Error for MatchupError
+{
+    fn description(&self) -> &str
+    {
+        return &self.description;
+    }
+}
+
+use std::fmt::{Formatter, Display, self};
+
+impl Display for MatchupError
+{
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result
+    {
+        write!(f, "{}", self.description)
+    }
 }

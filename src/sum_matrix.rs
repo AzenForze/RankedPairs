@@ -30,11 +30,12 @@ impl SumMatrix
                     {
                         for other_candidate in other_rank
                         {
+                            /* Could use entry patern, but they will often be ocupied, no need to copy keys. */
                             let mut new = false;
 
                             match sum_matrix.get_mut(&candidate, &other_candidate)
                             {
-                                Some(matchup) => { matchup.add_win_for(&candidate); }
+                                Some(matchup) => { matchup.add_win_for(&candidate).unwrap(); }
 
                                 None => { new = true; }
                             }
@@ -42,7 +43,7 @@ impl SumMatrix
                             if new
                             {
                                 let mut new_matchup = Matchup::new(candidate.clone(), other_candidate.clone());
-                                new_matchup.add_win_for(&candidate);
+                                new_matchup.add_win_for(&candidate).unwrap();
                                 sum_matrix.insert(candidate.clone(), other_candidate.clone(), new_matchup);
                             }
                         }
@@ -63,6 +64,7 @@ impl SumMatrix
     }
 }
 
+/// An iterator over the matrix's matchups
 pub struct Matchups<'a>
 {
     adapt: Values<'a, String, String, Matchup>
