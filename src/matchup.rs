@@ -4,6 +4,7 @@ use matchup_result::MatchupResult;
 /**
 A matchup between two candidates, including how many points each has versus the other.
 */
+#[derive(Debug)]
 pub struct Matchup
 {
     first: String,

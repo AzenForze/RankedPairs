@@ -56,22 +56,6 @@ pub struct Table<R:Eq+Hash, C:Eq+Hash, V>
     map: HashMap<Pair<R, C>, V>
 }
 
-
-pub struct Values<'a, R:'a, C:'a, V:'a>
-{
-    adapt: hash_map::Values<'a, Pair<R, C>, V>
-}
-
-impl<'a, R:'a, C:'a, V:'a> Iterator for Values<'a, R, C, V>
-{
-    type Item = &'a V;
-
-    fn next(&mut self) -> Option<Self::Item>
-    {
-        self.adapt.next()
-    }
-}
-
 impl<R:Eq+Hash, C:Eq+Hash, V> Table<R, C, V>
 {
     pub fn new() -> Self
@@ -92,5 +76,21 @@ impl<R:Eq+Hash, C:Eq+Hash, V> Table<R, C, V>
     pub fn values(&self) -> Values<R, C, V>
     {
         Values{ adapt: self.map.values() }
+    }
+}
+
+
+pub struct Values<'a, R:'a, C:'a, V:'a>
+{
+    adapt: hash_map::Values<'a, Pair<R, C>, V>
+}
+
+impl<'a, R:'a, C:'a, V:'a> Iterator for Values<'a, R, C, V>
+{
+    type Item = &'a V;
+
+    fn next(&mut self) -> Option<Self::Item>
+    {
+        self.adapt.next()
     }
 }

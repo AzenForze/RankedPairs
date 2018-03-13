@@ -22,6 +22,41 @@ impl SumMatrix
         
         for vote in ballots
         {
+            for i in 0..vote.len()
+            {
+                for higher in &vote[i]
+                {
+                    for j in (i+1)..vote.len()
+                    {
+                        for lower in &vote[j]
+                        {
+                            // (A, B) and (B, A) should be treated as the same matchup.
+                            let (A, B) = if higher < lower { (higher, lower) } else { (lower, higher) };
+
+                            // Could use entry pattern, but it would make a lot of unecessary copies of keys.
+                            let mut new = false;
+
+                            match sum_matrix.get_mut(&A, &B)
+                            {
+                                Some(matchup) => { matchup.add_win_for(&higher).unwrap(); }
+                                None => { new = true; }
+                            }
+                            
+                            if new
+                            {
+                                let mut new_matchup = Matchup::new(A.clone(), B.clone());
+                                new_matchup.add_win_for(&higher).unwrap();
+                                sum_matrix.insert(A.clone(), B.clone(), new_matchup);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
+        for vote in ballots
+        {
             for (i, rank) in vote.iter().enumerate()
             {
                 for candidate in rank
@@ -30,10 +65,12 @@ impl SumMatrix
                     {
                         for other_candidate in other_rank
                         {
+                            let (first, second) = if candidate < other_candidate { (candidate, other_candidate) } else { (other_candidate, candidate) } ;
+
                             /* Could use entry patern, but they will often be ocupied, no need to copy keys. */
                             let mut new = false;
 
-                            match sum_matrix.get_mut(&candidate, &other_candidate)
+                            match sum_matrix.get_mut(&first, &second)
                             {
                                 Some(matchup) => { matchup.add_win_for(&candidate).unwrap(); }
 
@@ -42,15 +79,16 @@ impl SumMatrix
                             
                             if new
                             {
-                                let mut new_matchup = Matchup::new(candidate.clone(), other_candidate.clone());
+                                let mut new_matchup = Matchup::new(first.clone(), second.clone());
                                 new_matchup.add_win_for(&candidate).unwrap();
-                                sum_matrix.insert(candidate.clone(), other_candidate.clone(), new_matchup);
+                                sum_matrix.insert(first.clone(), second.clone(), new_matchup);
                             }
                         }
                     }
                 }
             }
         }
+        */
 
         return SumMatrix { table: sum_matrix };
     }
