@@ -2,10 +2,9 @@
 use matchup::Matchup;
 use table::{Values, Table};
 
-/**
-A table logging how many times each candidate defeats each other candidate.
-Used for several Condorcet/IRR methods.
-*/
+
+/// A table logging how many times each candidate defeats each other candidate.
+/// Used for several Condorcet/Robin methods.
 pub struct SumMatrix
 {
     table: Table<String, String, Matchup>
@@ -13,92 +12,127 @@ pub struct SumMatrix
 
 impl SumMatrix
 {
-    /**
-    for each candidate A, finds each candidate from a later rank B, and adds one to A's victories over B.
-    */
     pub fn new(ballots: &Vec<Vec<Vec<String>>>) -> Self
     {
-        let mut sum_matrix: Table<String, String, Matchup> = Table::new();
+        let mut sum_matrix = SumMatrix { table: Table::new() };
         
         for vote in ballots
         {
-            for i in 0..vote.len()
-            {
-                for higher in &vote[i]
-                {
-                    for j in (i+1)..vote.len()
-                    {
-                        for lower in &vote[j]
-                        {
-                            // (A, B) and (B, A) should be treated as the same matchup.
-                            let (A, B) = if higher < lower { (higher, lower) } else { (lower, higher) };
-
-                            // Could use entry pattern, but it would make a lot of unecessary copies of keys.
-                            let mut new = false;
-
-                            match sum_matrix.get_mut(&A, &B)
-                            {
-                                Some(matchup) => { matchup.add_win_for(&higher).unwrap(); }
-                                None => { new = true; }
-                            }
-                            
-                            if new
-                            {
-                                let mut new_matchup = Matchup::new(A.clone(), B.clone());
-                                new_matchup.add_win_for(&higher).unwrap();
-                                sum_matrix.insert(A.clone(), B.clone(), new_matchup);
-                            }
-                        }
-                    }
-                }
-            }
+            sum_matrix.add_vote(vote);
         }
 
-        /*
-        for vote in ballots
-        {
-            for (i, rank) in vote.iter().enumerate()
-            {
-                for candidate in rank
-                {
-                    for other_rank in vote.iter().skip(i+1)
-                    {
-                        for other_candidate in other_rank
-                        {
-                            let (first, second) = if candidate < other_candidate { (candidate, other_candidate) } else { (other_candidate, candidate) } ;
-
-                            /* Could use entry patern, but they will often be ocupied, no need to copy keys. */
-                            let mut new = false;
-
-                            match sum_matrix.get_mut(&first, &second)
-                            {
-                                Some(matchup) => { matchup.add_win_for(&candidate).unwrap(); }
-
-                                None => { new = true; }
-                            }
-                            
-                            if new
-                            {
-                                let mut new_matchup = Matchup::new(first.clone(), second.clone());
-                                new_matchup.add_win_for(&candidate).unwrap();
-                                sum_matrix.insert(first.clone(), second.clone(), new_matchup);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        */
-
-        return SumMatrix { table: sum_matrix };
+        return sum_matrix;
     }
 
-    /**
-    Returns an iterator the matchups.
-    */
+    pub fn add_vote(&mut self, vote: &Vec<Vec<String>>)
+    {
+        for i in 0..vote.len()
+        {
+            for higher in &vote[i]
+            {
+                for j in (i+1)..vote.len()
+                {
+                    for lower in &vote[j]
+                    {
+                        self.add_win(higher, lower);
+                    }
+                }
+            }
+        }
+    }
+
+    fn add_win(&mut self, for_cand: &String, against_cand: &String)
+    {
+        // (A, B) and (B, A) should be treated as the same pair.
+        let (a, b) = if for_cand < against_cand { (for_cand, against_cand) } else { (against_cand, for_cand) };
+        
+        self.entry(a, b).or_create().add_win_for(for_cand).unwrap()
+    }
+
+    
+    /// Returns an iterator over the matchups.
     pub fn matchups(&self) -> Matchups
     {
         Matchups{ adapt: self.table.values() }
+    }
+
+
+    /// entry return an entry that takes references as keys which can be cloned if they need to be inserted.
+    fn entry<'a, 'b, 'c>(&'a mut self, row: &'b String, column: &'c String) -> EntryClone<'a, 'b, 'c>
+    {
+        if self.table.contains(row, column)
+        {
+            return EntryClone::Occupied(OccupiedEntryClone { reference: self, row: row, column: column } );
+        }
+        else {
+            return EntryClone::Vacant(VacantEntryClone { reference: self, row: row, column: column } );
+        }
+    }
+}
+
+/// An entry that takes references as keys which can be cloned if they need to be inserted.
+enum EntryClone<'a, 'b, 'c>
+{
+    Vacant(VacantEntryClone<'a, 'b, 'c>),
+    Occupied(OccupiedEntryClone<'a, 'b, 'c>)
+}
+
+impl<'a, 'b, 'c> EntryClone<'a, 'b, 'c>
+{
+    /// Returns the pair's matchup, or insers and returns the provided matchup.
+    fn or_insert(self, matchup: Matchup) -> &'a mut Matchup
+    {
+        match self
+        {
+            EntryClone::Vacant(entry) => {entry.insert(matchup)},
+            EntryClone::Occupied(entry) => {entry.get()}
+        }
+    }
+
+    /// Returns the pair's matchup, or creates and returns a new one if it didn't exist.
+    fn or_create(self) -> &'a mut Matchup
+    {
+        match self
+        {
+            EntryClone::Vacant(entry) => {
+                let (row, column) = (entry.row.clone(), entry.column.clone());
+                entry.insert(Matchup::new(row, column))
+            },
+            EntryClone::Occupied(entry) => {
+                entry.get()
+            }
+        }
+    }
+}
+
+struct VacantEntryClone<'a, 'b, 'c>
+{
+    reference: &'a mut SumMatrix,
+    row: &'b String,
+    column: &'c String
+}
+
+impl<'a, 'b, 'c> VacantEntryClone<'a, 'b, 'c>
+{
+    fn insert(self, val: Matchup) -> &'a mut Matchup
+    {
+        self.reference.table.insert(self.row.to_owned(), self.column.to_owned(), val);
+        self.reference.table.get_mut(self.row, self.column).unwrap()
+    }
+}
+
+struct OccupiedEntryClone<'a, 'b, 'c>
+{
+    reference: &'a mut SumMatrix,
+    row: &'b String,
+    column: &'c String
+}
+
+impl<'a, 'b, 'c> OccupiedEntryClone<'a, 'b, 'c>
+{
+    fn get(self) -> &'a mut Matchup
+    {
+        self.reference.table.get_mut(self.row, self.column).unwrap()
     }
 }
 

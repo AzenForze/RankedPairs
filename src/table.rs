@@ -7,7 +7,7 @@ use std::borrow::Borrow;
 pub struct Pair<R,C>(R,C);
 
 #[derive(PartialEq, Eq, Hash)]
-struct BPair<'a,'b,R:'a,C:'b>(&'a R,&'b C);
+struct BPair<'a,'b, R:'a, C:'b>(&'a R, &'b C);
 
 trait KeyPair<R,C> {
     fn row(&self) -> &R;
@@ -77,8 +77,12 @@ impl<R:Eq+Hash, C:Eq+Hash, V> Table<R, C, V>
     {
         Values{ adapt: self.map.values() }
     }
-}
 
+    pub fn contains(&self, row: &R, column: &C) -> bool
+    {
+        self.map.contains_key(&BPair(row, column) as &KeyPair<R, C>)
+    }
+}
 
 pub struct Values<'a, R:'a, C:'a, V:'a>
 {

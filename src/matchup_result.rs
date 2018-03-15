@@ -15,7 +15,7 @@ pub struct MatchupResult<'a>
     use_margin: bool
 }
 
-impl <'a> Ord for MatchupResult<'a>
+impl<'a> Ord for MatchupResult<'a>
 {
     fn cmp(&self, other: &MatchupResult) -> Ordering
     {
