@@ -22,7 +22,7 @@ fn main()
         42:Memphis>Nashville>Chattanooga>Knoxville
         26:Nashville>Chattanooga>Knoxville>Memphis
         15:Chattanooga>Knoxville>Nashville>Memphis
-        17:Knoxville>Chattanooga>Nashville>Memphis");
+        17:Knoxville>Chattanooga>Nashville>Memphis").unwrap();
 
 
     let mut basic_5cand = Election::new();
@@ -36,7 +36,7 @@ fn main()
         7:C>A>E>B>D
         2:C>B>A>D>E
         7:D>C>E>B>A
-        8:E>B>A>D>C");
+        8:E>B>A>D>C").unwrap();
 
 
     let mut basic_3cand = Election::new();
@@ -45,9 +45,9 @@ fn main()
     basic_3cand.add_ballots("
         35:B>C>S
         34:C>S>B
-        31:S>B>C");
+        31:S>B>C").unwrap();
 
-    let ranked_pairs = RankedPairs::with_election(city_elec, StrengthType::Margin);
+    let ranked_pairs = RankedPairs::with_election(&city_elec, StrengthType::Margin);
 
     let winner = match ranked_pairs.get_winner()
     {

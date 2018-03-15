@@ -1,6 +1,4 @@
 
-use sum_matrix::SumMatrix;
-
 pub struct Election
 {
     pub ballots: Vec<Vec<Vec<String>>>
@@ -13,15 +11,14 @@ impl Election
         Election {ballots: Vec::new()}
     }
 
-    pub fn get_matrix(&self) -> SumMatrix
+    pub fn votes(&self) -> &[Vec<Vec<String>>]
     {
-        SumMatrix::new(&self.ballots)
+        return &self.ballots[..];
     }
+    
 
-    /**
-    Parses a String vote.
-    "A>B=C>D" creates [[a], [b, c], [d]]
-    */
+    /// Parses a String vote.
+    /// "A>B=C>D" creates [[a], [b, c], [d]]
     pub fn add_vote(&mut self, data: &str)
     {
         let mut ballot: Vec<Vec<String>> = Vec::new();
@@ -40,46 +37,87 @@ impl Election
         self.ballots.push(ballot);
     }
 
-    /**
-    Parses a String set of ballots.
-    Format:
-    [count]:[vote]
-    (See self.add_vote() for [vote])
-    */
-    pub fn add_ballots(&mut self, data: &str)
+    /// Parses a String into ballots.
+    /// Format: Per line:
+    /// [amount]:[vote]
+    /// (See self.add_vote() for [vote])
+    pub fn add_ballots(&mut self, data: &str) -> Result<(), ElectionParseError>
     {
         for line in data.trim().lines()
         {
             let mut parts = line.trim().split(':');
 
-            let count_str = match parts.next()
+            let amount_str = match parts.next()
             {
-                Some(count_str) => count_str,
-                None => panic!("Wrong ballot format")
+                Some(amount_str) => {
+                    if amount_str.len() == 0 {
+                        return Err(ElectionParseError::NoAmountError)
+                    } else {
+                        amount_str
+                    }
+                },
+                None => return Err(ElectionParseError::NoAmountError)
             };
             
             let vote = match parts.next()
             {
                 Some(vote) => vote,
-                None => panic!("Wrong ballot format")
+                None => return Err(ElectionParseError::NoVoteError)
             };
 
-            match parts.next()
+            if let Some(_) = parts.next()
             {
-                Some(_) => panic!("Wrong ballot format"),
-                None => {}
+                return Err(ElectionParseError::ExcessDataError);
             }
             
-            let count = match count_str.parse::<u32>()
+            let amount = match amount_str.parse::<u32>()
             {
-                Ok(count) => count,
-                Err(e) => panic!("{}; string was: {}", e, count_str)
+                Ok(amount) => amount,
+                Err(e) => return Err(ElectionParseError::AmountParseError(e))
             };
 
-            for _ in 0..count
+            for _ in 0..amount
             {
                 self.add_vote(vote);
             }
+        }
+
+        return Ok(());
+    }
+}
+
+use std::num::ParseIntError;
+
+#[derive(Debug)]
+pub enum ElectionParseError
+{
+    NoAmountError,
+    NoVoteError,
+    ExcessDataError,
+    AmountParseError(ParseIntError)
+}
+
+use std::fmt;
+impl fmt::Display for ElectionParseError
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+    {
+        write!(f, "{}", self.description())
+    }
+}
+
+use std::error::Error;
+
+impl Error for ElectionParseError
+{
+    fn description(&self) -> &str
+    {
+        match *self
+        {
+            ElectionParseError::NoAmountError => "could not find amount",
+            ElectionParseError::NoVoteError => "could not find vote",
+            ElectionParseError::ExcessDataError => "too many sections",
+            ElectionParseError::AmountParseError(ref e) => e.description()
         }
     }
 }

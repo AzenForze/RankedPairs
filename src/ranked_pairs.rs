@@ -24,9 +24,9 @@ impl RankedPairs
         RankedPairs{ sum_matrix: sum_matrix, strength_type: strength_type }
     }
 
-    pub fn with_election(election: Election, strength_type: StrengthType) -> Self
+    pub fn with_election(election: &Election, strength_type: StrengthType) -> Self
     {
-        RankedPairs::with_matrix(election.get_matrix(), strength_type)
+        RankedPairs::with_matrix(SumMatrix::new(election), strength_type)
     }
 
     /// Copies matchups into a list
@@ -121,9 +121,9 @@ mod RankedPairsTests
         42:Memphis>Nashville>Chattanooga>Knoxville
         26:Nashville>Chattanooga>Knoxville>Memphis
         15:Chattanooga>Knoxville>Nashville>Memphis
-        17:Knoxville>Chattanooga>Nashville>Memphis");
+        17:Knoxville>Chattanooga>Nashville>Memphis").unwrap();
 
-        let ranked_pairs = RankedPairs::with_election(election, StrengthType::Margin);
+        let ranked_pairs = RankedPairs::with_election(&election, StrengthType::Margin);
 
         match ranked_pairs.get_winner()
         {
@@ -147,9 +147,9 @@ mod RankedPairsTests
         7:C>A>E>B>D
         2:C>B>A>D>E
         7:D>C>E>B>A
-        8:E>B>A>D>C");
+        8:E>B>A>D>C").unwrap();
 
-        let ranked_pairs = RankedPairs::with_election(election, StrengthType::Margin);
+        let ranked_pairs = RankedPairs::with_election(&election, StrengthType::Margin);
 
         match ranked_pairs.get_winner()
         {
@@ -168,9 +168,9 @@ mod RankedPairsTests
         election.add_ballots("
         35:B>C>S
         34:C>S>B
-        31:S>B>C");
+        31:S>B>C").unwrap();
 
-        let ranked_pairs = RankedPairs::with_election(election, StrengthType::Margin);
+        let ranked_pairs = RankedPairs::with_election(&election, StrengthType::Margin);
 
         match ranked_pairs.get_winner()
         {

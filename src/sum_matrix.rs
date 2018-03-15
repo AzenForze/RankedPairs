@@ -1,6 +1,7 @@
 
 use matchup::Matchup;
 use table::{Values, Table};
+use election::Election;
 
 
 /// A table logging how many times each candidate defeats each other candidate.
@@ -12,11 +13,11 @@ pub struct SumMatrix
 
 impl SumMatrix
 {
-    pub fn new(ballots: &Vec<Vec<Vec<String>>>) -> Self
+    pub fn new(election: &Election) -> Self
     {
         let mut sum_matrix = SumMatrix { table: Table::new() };
-        
-        for vote in ballots
+
+        for vote in election.votes()
         {
             sum_matrix.add_vote(vote);
         }
@@ -70,6 +71,19 @@ impl SumMatrix
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 /// An entry that takes references as keys which can be cloned if they need to be inserted.
 enum EntryClone<'a, 'b, 'c>
 {
@@ -84,7 +98,10 @@ impl<'a, 'b, 'c> EntryClone<'a, 'b, 'c>
     {
         match self
         {
-            EntryClone::Vacant(entry) => {entry.insert(matchup)},
+            EntryClone::Vacant(mut entry) => {
+                entry.insert(matchup);
+                entry.reference.table.get_mut(entry.row, entry.column).unwrap()
+                },
             EntryClone::Occupied(entry) => {entry.get()}
         }
     }
@@ -94,9 +111,11 @@ impl<'a, 'b, 'c> EntryClone<'a, 'b, 'c>
     {
         match self
         {
-            EntryClone::Vacant(entry) => {
+            EntryClone::Vacant(mut entry) => {
                 let (row, column) = (entry.row.clone(), entry.column.clone());
-                entry.insert(Matchup::new(row, column))
+                entry.insert(Matchup::new(row, column));
+                entry.reference.table.get_mut(entry.row, entry.column).unwrap()
+
             },
             EntryClone::Occupied(entry) => {
                 entry.get()
@@ -114,10 +133,9 @@ struct VacantEntryClone<'a, 'b, 'c>
 
 impl<'a, 'b, 'c> VacantEntryClone<'a, 'b, 'c>
 {
-    fn insert(self, val: Matchup) -> &'a mut Matchup
+    fn insert(&mut self, val: Matchup)
     {
         self.reference.table.insert(self.row.to_owned(), self.column.to_owned(), val);
-        self.reference.table.get_mut(self.row, self.column).unwrap()
     }
 }
 
