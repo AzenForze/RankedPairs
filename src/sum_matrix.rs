@@ -13,6 +13,11 @@ pub struct SumMatrix
 
 impl SumMatrix
 {
+    fn test(&mut self)
+    {
+        self.table.get_mut("row", "column");
+    }
+
     pub fn new(election: &Election) -> Self
     {
         let mut sum_matrix = SumMatrix { table: Table::new() };
@@ -93,6 +98,7 @@ enum EntryClone<'a, 'b, 'c>
 
 impl<'a, 'b, 'c> EntryClone<'a, 'b, 'c>
 {
+    /*
     /// Returns the pair's matchup, or insers and returns the provided matchup.
     fn or_insert(self, matchup: Matchup) -> &'a mut Matchup
     {
@@ -105,6 +111,7 @@ impl<'a, 'b, 'c> EntryClone<'a, 'b, 'c>
             EntryClone::Occupied(entry) => {entry.get()}
         }
     }
+    */
 
     /// Returns the pair's matchup, or creates and returns a new one if it didn't exist.
     fn or_create(self) -> &'a mut Matchup
