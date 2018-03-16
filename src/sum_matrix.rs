@@ -13,11 +13,6 @@ pub struct SumMatrix
 
 impl SumMatrix
 {
-    fn test(&mut self)
-    {
-        self.table.get_mut("row", "column");
-    }
-
     pub fn new(election: &Election) -> Self
     {
         let mut sum_matrix = SumMatrix { table: Table::new() };
@@ -51,8 +46,9 @@ impl SumMatrix
     {
         // (A, B) and (B, A) should be treated as the same pair.
         let (a, b) = if for_cand < against_cand { (for_cand, against_cand) } else { (against_cand, for_cand) };
-        
-        self.entry(a, b).or_create().add_win_for(for_cand).unwrap()
+
+
+        self.table.entry(a, b).or_emplace(a, b).add_win_for(for_cand).unwrap()
     }
 
     
@@ -61,105 +57,36 @@ impl SumMatrix
     {
         Matchups{ adapt: self.table.values() }
     }
-
-
-    /// entry return an entry that takes references as keys which can be cloned if they need to be inserted.
-    fn entry<'a, 'b, 'c>(&'a mut self, row: &'b String, column: &'c String) -> EntryClone<'a, 'b, 'c>
-    {
-        if self.table.contains(row, column)
-        {
-            return EntryClone::Occupied(OccupiedEntryClone { reference: self, row: row, column: column } );
-        }
-        else {
-            return EntryClone::Vacant(VacantEntryClone { reference: self, row: row, column: column } );
-        }
-    }
 }
 
+use table::TableEntry;
+use std::borrow::{Borrow, ToOwned};
+use std::hash::Hash;
 
-
-
-
-
-
-
-
-
-
-
-
-
-/// An entry that takes references as keys which can be cloned if they need to be inserted.
-enum EntryClone<'a, 'b, 'c>
+impl<'a, 'b, Q, U> TableEntry<'a, 'b, String, String, Q, U, Matchup>
+    where
+    String: Borrow<Q>,
+    String: Borrow<U>,
+    Q: ToOwned<Owned=String>+Hash+Eq+?Sized, 
+    U: ToOwned<Owned=String>+Hash+Eq+?Sized
 {
-    Vacant(VacantEntryClone<'a, 'b, 'c>),
-    Occupied(OccupiedEntryClone<'a, 'b, 'c>)
-}
-
-impl<'a, 'b, 'c> EntryClone<'a, 'b, 'c>
-{
-    /*
-    /// Returns the pair's matchup, or insers and returns the provided matchup.
-    fn or_insert(self, matchup: Matchup) -> &'a mut Matchup
+    fn or_emplace<S, T>(self, cand1: &S, cand2: &T) -> &'a mut Matchup
+        where
+        String: Borrow<S>,
+        String: Borrow<T>,
+        S: ToOwned<Owned=String>+?Sized,
+        T: ToOwned<Owned=String>+?Sized
     {
         match self
         {
-            EntryClone::Vacant(mut entry) => {
-                entry.insert(matchup);
-                entry.reference.table.get_mut(entry.row, entry.column).unwrap()
-                },
-            EntryClone::Occupied(entry) => {entry.get()}
-        }
-    }
-    */
-
-    /// Returns the pair's matchup, or creates and returns a new one if it didn't exist.
-    fn or_create(self) -> &'a mut Matchup
-    {
-        match self
-        {
-            EntryClone::Vacant(mut entry) => {
-                let (row, column) = (entry.row.clone(), entry.column.clone());
-                entry.insert(Matchup::new(row, column));
-                entry.reference.table.get_mut(entry.row, entry.column).unwrap()
-
+            TableEntry::Vacant(entry) => {
+                entry.insert(Matchup::new(cand1.to_owned(), cand2.to_owned()))
             },
-            EntryClone::Occupied(entry) => {
-                entry.get()
-            }
+            TableEntry::Occupied(entry) => { entry.get() }
         }
     }
 }
 
-struct VacantEntryClone<'a, 'b, 'c>
-{
-    reference: &'a mut SumMatrix,
-    row: &'b String,
-    column: &'c String
-}
-
-impl<'a, 'b, 'c> VacantEntryClone<'a, 'b, 'c>
-{
-    fn insert(&mut self, val: Matchup)
-    {
-        self.reference.table.insert(self.row.to_owned(), self.column.to_owned(), val);
-    }
-}
-
-struct OccupiedEntryClone<'a, 'b, 'c>
-{
-    reference: &'a mut SumMatrix,
-    row: &'b String,
-    column: &'c String
-}
-
-impl<'a, 'b, 'c> OccupiedEntryClone<'a, 'b, 'c>
-{
-    fn get(self) -> &'a mut Matchup
-    {
-        self.reference.table.get_mut(self.row, self.column).unwrap()
-    }
-}
 
 /// An iterator over the matrix's matchups
 pub struct Matchups<'a>
